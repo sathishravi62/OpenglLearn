@@ -104,10 +104,15 @@ int main()
 		ourShader.Use();
 		// Implemeting model matrix
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.5f, -0.5f, 0.0f)); // moving an object
-		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); // rotaing an object
-		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));// scaling an object
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.0f)); // moving an object
+		model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // rotaing an object in y axis
+		
+		// Implemeting Projection matrix
+		glm::mat4 projection = glm::mat4(1.0f);
+		projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		
 		ourShader.SetMatrix4("model", model, GL_FALSE);// passing the value to the model matrix in shader
+		ourShader.SetMatrix4("p", projection, GL_FALSE);
 
 		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // if we are using EBO

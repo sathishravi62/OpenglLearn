@@ -7,10 +7,11 @@ out vec3 color;
 out vec2 texCoord; 
 
 uniform mat4 model;
+uniform mat4 p;
 
 void main()
 {
-    gl_Position = model * vec4(vertex ,1.0); // projection * model *
+    gl_Position = p * model * vec4(vertex ,1.0); // projection * model *
 	color = aColor;
 	texCoord = aTexCoord;
 }
