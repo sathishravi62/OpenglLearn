@@ -9,13 +9,25 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Error.h"
+#include "Camera.h"
 
 void frameBuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+// timing
+float deltaTime = 0.0f;	// time between current frame and last frame
+float lastFrame = 0.0f;
 
 int main()
 {
@@ -33,6 +45,11 @@ int main()
 
 	glfwMakeContextCurrent(_window);
 	glfwSetFramebufferSizeCallback(_window, frameBuffer_size_callback);
+	glfwSetCursorPosCallback(_window, mouse_callback);
+	glfwSetScrollCallback(_window, scroll_callback);
+
+	// tell GLFW to capture our mouse
+	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -88,16 +105,16 @@ int main()
 	};
 
 	glm::vec3 cubePositions[] = {
-  glm::vec3(0.0f,  0.0f,  0.0f),
-  glm::vec3(2.0f,  5.0f, -15.0f),
-  glm::vec3(-1.5f, -2.2f, -2.5f),
-  glm::vec3(-3.8f, -2.0f, -12.3f),
-  glm::vec3(2.4f, -0.4f, -3.5f),
-  glm::vec3(-1.7f,  3.0f, -7.5f),
-  glm::vec3(1.3f, -2.0f, -2.5f),
-  glm::vec3(1.5f,  2.0f, -2.5f),
-  glm::vec3(1.5f,  0.2f, -1.5f),
-  glm::vec3(-1.3f,  1.0f, -1.5f)
+         glm::vec3(0.0f,  0.0f,  0.0f),
+         glm::vec3(2.0f,  5.0f, -15.0f),
+         glm::vec3(-1.5f, -2.2f, -2.5f),
+         glm::vec3(-3.8f, -2.0f, -12.3f),
+         glm::vec3(2.4f, -0.4f, -3.5f),
+         glm::vec3(-1.7f,  3.0f, -7.5f),
+         glm::vec3(1.3f, -2.0f, -2.5f),
+         glm::vec3(1.5f,  2.0f, -2.5f),
+         glm::vec3(1.5f,  0.2f, -1.5f),
+         glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
 	unsigned int VBO, VAO;
@@ -130,6 +147,11 @@ int main()
 
 	while (!glfwWindowShouldClose(_window))
 	{
+		// per-frame time logic
+		// --------------------
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 
 		// input 
 		processInput(_window);
@@ -144,15 +166,16 @@ int main()
 
 		// draw our first triangle
 		ourShader.Use();
-		// Implemeting model matrix
-		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); // moving an object		
+
 		// Implemeting Projection matrix
-		glm::mat4 projection = glm::mat4(1.0f);
-		projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		
-		ourShader.SetMatrix4("view", view, GL_FALSE);// passing the value to the model matrix in shader
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		ourShader.SetMatrix4("p", projection, GL_FALSE);
+
+		// camera/view transformation
+		glm::mat4 view = camera.getViewMatrix();
+		ourShader.SetMatrix4("view", view, GL_FALSE);// passing the value to the model matrix in shader
+		
 
 		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // if we are using EBO
@@ -194,4 +217,36 @@ void processInput(GLFWwindow * window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.processKeyBoard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.processKeyBoard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.processKeyBoard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.processKeyBoard(RIGHT, deltaTime);
+}
+
+void mouse_callback(GLFWwindow * window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.processMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow * window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll(yoffset);
 }
