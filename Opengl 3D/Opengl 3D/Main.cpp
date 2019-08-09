@@ -101,6 +101,7 @@ int main()
 		lightingShader.SetVector3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f), GL_FALSE);
 		lightingShader.SetVector3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f), GL_FALSE);
 		lightingShader.SetVector3f("lightPos", lightPos, GL_FALSE);
+		lightingShader.SetVector3f("viewPos", camera.position, GL_FALSE);
 
 		// Implemeting Projection matrix
 		glm::mat4 projection;
@@ -120,6 +121,10 @@ int main()
 		lampShader.Use();
 		lampShader.SetMatrix4("p", projection, GL_FALSE);
 		lampShader.SetMatrix4("view", view, GL_FALSE);
+
+		// moving around the lightsource 
+		lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+		lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPos);
