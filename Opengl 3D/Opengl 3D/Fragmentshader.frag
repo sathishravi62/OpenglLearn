@@ -2,11 +2,13 @@
 
 out vec4 fragColor;
 
-in vec2 texCoord; 
+//in vec2 texCoord; 
 
-uniform sampler2D image;
+//uniform sampler2D image;
+uniform vec3 objectColor;
+uniform vec3 lightColor;
 
 void main()
 {    
-    fragColor =  texture(image,texCoord); 
+    fragColor =  vec4(lightColor * objectColor,1.0f); //texture(image,texCoord); 
 }  

@@ -10,6 +10,8 @@
 #include "Texture.h"
 #include "Error.h"
 #include "Camera.h"
+#include "Objects.h"
+
 
 void frameBuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -28,6 +30,7 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 int main()
 {
@@ -56,94 +59,23 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);
 
-	Shader ourShader;
-	ourShader.loadShaderFromFile("Vertexshader.vert", "Fragmentshader.frag");
+	Shader lightingShader;
+	lightingShader.loadShaderFromFile("Vertexshader.vert", "Fragmentshader.frag");
 	
-	float vertices[] = {
+	Shader lampShader;
+	lampShader.loadShaderFromFile("lampVs.vert", "lampFs.frag");
 
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	// create Light cube
+	Objects lightingObject;
+	lightingObject.CreateObject();
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	// create LampObject
+	Objects lampObjects;
+	lampObjects.CreateObject();
 
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-	};
-
-	glm::vec3 cubePositions[] = {
-         glm::vec3(0.0f,  0.0f,  0.0f),
-         glm::vec3(2.0f,  5.0f, -15.0f),
-         glm::vec3(-1.5f, -2.2f, -2.5f),
-         glm::vec3(-3.8f, -2.0f, -12.3f),
-         glm::vec3(2.4f, -0.4f, -3.5f),
-         glm::vec3(-1.7f,  3.0f, -7.5f),
-         glm::vec3(1.3f, -2.0f, -2.5f),
-         glm::vec3(1.5f,  2.0f, -2.5f),
-         glm::vec3(1.5f,  0.2f, -1.5f),
-         glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
-
-	unsigned int VBO, VAO;
-
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-
-	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-	glBindVertexArray(VAO);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-   // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-	glBindVertexArray(0);
-
-
-	// create texture
-	Texture ourTexture;
-	ourTexture.LoadTexture("texture/container.jpg", GL_TRUE);
+	//// create texture
+	//Texture ourTexture;
+	//ourTexture.LoadTexture("texture/container.jpg", GL_TRUE);
 
 	while (!glfwWindowShouldClose(_window))
 	{
@@ -161,35 +93,39 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 
-		// bind textures on corresponding texture units
-		ourTexture.Bind();
+		//// bind textures on corresponding texture units
+		//ourTexture.Bind();
 
 		// draw our first triangle
-		ourShader.Use();
+		lightingShader.Use();
+		lightingShader.SetVector3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f), GL_FALSE);
+		lightingShader.SetVector3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f), GL_FALSE);
 
 		// Implemeting Projection matrix
 		glm::mat4 projection;
 		projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		ourShader.SetMatrix4("p", projection, GL_FALSE);
+		lightingShader.SetMatrix4("p", projection, GL_FALSE);
 
 		// camera/view transformation
 		glm::mat4 view = camera.getViewMatrix();
-		ourShader.SetMatrix4("view", view, GL_FALSE);// passing the value to the model matrix in shader
+		lightingShader.SetMatrix4("view", view, GL_FALSE);// passing the value to the model matrix in shader
 		
+		glm::mat4 model = glm::mat4(1.0f);
+		lightingShader.SetMatrix4("model", model, GL_FALSE);
+		
+		// draw lighting object
+		lightingObject.draw();
 
-		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // if we are using EBO
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 20.0f * i;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			ourShader.SetMatrix4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-		 // if we are not using EBO
-		// glBindVertexArray(0); // no need to unbind it every time 
+		lampShader.Use();
+		lampShader.SetMatrix4("p", projection, GL_FALSE);
+		lampShader.SetMatrix4("view", view, GL_FALSE);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		lampShader.SetMatrix4("model", model, GL_FALSE);
+
+		lampObjects.draw();
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -199,8 +135,6 @@ int main()
 	}
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
 
 	glfwTerminate();
 	return 0;
