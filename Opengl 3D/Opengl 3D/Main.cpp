@@ -100,6 +100,7 @@ int main()
 		lightingShader.Use();
 		lightingShader.SetVector3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f), GL_FALSE);
 		lightingShader.SetVector3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f), GL_FALSE);
+		lightingShader.SetVector3f("lightPos", lightPos, GL_FALSE);
 
 		// Implemeting Projection matrix
 		glm::mat4 projection;
