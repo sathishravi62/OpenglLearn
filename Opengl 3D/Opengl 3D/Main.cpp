@@ -98,10 +98,27 @@ int main()
 
 		// draw our first triangle
 		lightingShader.Use();
-		lightingShader.SetVector3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f), GL_FALSE);
-		lightingShader.SetVector3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f), GL_FALSE);
-		lightingShader.SetVector3f("lightPos", lightPos, GL_FALSE);
+		lightingShader.SetVector3f("light.position", lightPos, GL_FALSE);
 		lightingShader.SetVector3f("viewPos", camera.position, GL_FALSE);
+
+		// light properties
+		glm::vec3 lightColor;
+		lightColor.x = sin(glfwGetTime() * 2.0f);
+		lightColor.y = sin(glfwGetTime() * 0.7f);
+		lightColor.z = sin(glfwGetTime() * 1.3f);
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+		lightingShader.SetVector3f("light.ambient", ambientColor);
+		lightingShader.SetVector3f("light.diffuse", diffuseColor);
+		lightingShader.SetVector3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+
+		// material properties
+		lightingShader.SetVector3f("material.ambient", 1.0f, 0.5f, 0.31f);
+		lightingShader.SetVector3f("material.diffuse", 1.0f, 0.5f, 0.31f);
+		lightingShader.SetVector3f("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+		lightingShader.SetFloat("material.shininess", 32.0f);
+
 
 		// Implemeting Projection matrix
 		glm::mat4 projection;
