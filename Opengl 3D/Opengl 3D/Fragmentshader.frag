@@ -8,7 +8,9 @@ struct Material
 };
 
 struct Light {
-    vec3 position;
+   // vec3 position; // no longer need the position for direction light
+	
+	vec3 direction;
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
@@ -34,7 +36,7 @@ void main()
 
 	// calculating diffuse light; 
 	vec3 norm = normalize(Normal); 
-	vec3 lightDir = normalize(light.position - FragPos);
+	vec3 lightDir = normalize(-light.direction);
 	float diff = max(dot(norm,lightDir),0.0);
 	vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse,TexCoords));
 
@@ -45,18 +47,18 @@ void main()
 	vec3 specular = light.specular * spec * vec3(texture(material.specular,TexCoords));
 
 	// adding emission
-	vec3 emission = vec3(0.0);
-	if (texture(material.specular, TexCoords).r == 0.0)   /*rough check for blackbox inside spec texture */
-    {
-        /*apply emission texture */
-        emission = texture(material.emission, TexCoords).rbg;
-        
-        /*some extra fun stuff with "time uniform" */
-        emission = texture(material.emission, TexCoords + vec2(0.0,time)).rgb;   /*moving */
-        emission = emission * (sin(time) * 0.5 + 0.5) * 2.0;                     /*fading */
-		emission = emission + vec3(0.0f,0.0f,1.0f);
-    }
+//	vec3 emission = vec3(0.0);
+//	if (texture(material.specular, TexCoords).r == 0.0)   /*rough check for blackbox inside spec texture */
+//    {
+//        /*apply emission texture */
+//        emission = texture(material.emission, TexCoords).rbg;
+//        
+//        /*some extra fun stuff with "time uniform" */
+//        emission = texture(material.emission, TexCoords + vec2(0.0,time)).rgb;   /*moving */
+//        emission = emission * (sin(time) * 0.5 + 0.5) * 2.0;                     /*fading */
+//
+//    } 
 	// adding the light and multiply with a object color
-	vec3 result = (ambient + diffuse + specular + emission);
+	vec3 result = (ambient + diffuse + specular ); // 
     fragColor =  vec4(result,1.0f);
 }  
