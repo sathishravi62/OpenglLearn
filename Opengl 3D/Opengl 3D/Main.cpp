@@ -132,6 +132,9 @@ int main()
 		lightingShader.SetVector3f("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
 		lightingShader.SetFloat("material.shininess", 64.0f);
 		lightingShader.SetFloat("time", glfwGetTime());
+		lightingShader.SetFloat("light.constant", 1.0f);
+		lightingShader.SetFloat("light.linear", 0.09f);
+		lightingShader.SetFloat("light.quadratic", 0.032f);
 
 		// Implemeting Projection matrix
 		glm::mat4 projection;
@@ -145,6 +148,7 @@ int main()
 		glm::mat4 model = glm::mat4(1.0f);
 		lightingShader.SetMatrix4("model", model, GL_FALSE);
 		lightingShader.SetVector3f("light.direction", -0.2f, -1.0f, -0.3f);
+		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, ourTexture.ID);
 
