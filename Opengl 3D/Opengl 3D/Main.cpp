@@ -74,8 +74,16 @@ int main()
 	lampObjects.CreateObject();
 
 	//// create texture
-	//Texture ourTexture;
-	//ourTexture.LoadTexture("texture/container.jpg", GL_TRUE);
+	Texture ourTexture;
+	ourTexture.LoadTexture("texture/cont.png", GL_TRUE);
+	Texture specularTex;
+	specularTex.LoadTexture("texture/contSpec.png", GL_TRUE);
+	Texture emissionTex;
+	emissionTex.LoadTexture("texture/Emission.jpg", GL_TRUE);
+
+	lightingShader.SetInteger("material.diffuse", 0,GL_TRUE);
+	lightingShader.SetInteger("material.specular", 1, GL_TRUE);
+	lightingShader.SetInteger("material.emission", 2, GL_TRUE);
 
 	while (!glfwWindowShouldClose(_window))
 	{
@@ -89,7 +97,7 @@ int main()
 		processInput(_window);
 
 		// render
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 
@@ -101,24 +109,16 @@ int main()
 		lightingShader.SetVector3f("light.position", lightPos, GL_FALSE);
 		lightingShader.SetVector3f("viewPos", camera.position, GL_FALSE);
 
-		// light properties
-		glm::vec3 lightColor;
-		lightColor.x = sin(glfwGetTime() * 2.0f);
-		lightColor.y = sin(glfwGetTime() * 0.7f);
-		lightColor.z = sin(glfwGetTime() * 1.3f);
-		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
-		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-		lightingShader.SetVector3f("light.ambient", ambientColor);
-		lightingShader.SetVector3f("light.diffuse", diffuseColor);
+		
+		lightingShader.SetVector3f("light.ambient",glm::vec3(0.2f,0.2f,0.2f));
+		lightingShader.SetVector3f("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5));
 		lightingShader.SetVector3f("light.specular", 1.0f, 1.0f, 1.0f);
-
+		
 
 		// material properties
-		lightingShader.SetVector3f("material.ambient", 1.0f, 0.5f, 0.31f);
-		lightingShader.SetVector3f("material.diffuse", 1.0f, 0.5f, 0.31f);
 		lightingShader.SetVector3f("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
-		lightingShader.SetFloat("material.shininess", 32.0f);
-
+		lightingShader.SetFloat("material.shininess", 64.0f);
+		lightingShader.SetFloat("time", glfwGetTime());
 
 		// Implemeting Projection matrix
 		glm::mat4 projection;
@@ -132,6 +132,15 @@ int main()
 		glm::mat4 model = glm::mat4(1.0f);
 		lightingShader.SetMatrix4("model", model, GL_FALSE);
 		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, ourTexture.ID);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularTex.ID);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, emissionTex.ID);
+
 		// draw lighting object
 		lightingObject.draw();
 
@@ -139,10 +148,7 @@ int main()
 		lampShader.SetMatrix4("p", projection, GL_FALSE);
 		lampShader.SetMatrix4("view", view, GL_FALSE);
 
-		// moving around the lightsource 
-		lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-		lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
-
+		
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.2f));
