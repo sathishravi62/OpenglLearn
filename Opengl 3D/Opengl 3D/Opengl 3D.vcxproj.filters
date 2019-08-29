@@ -56,5 +56,6 @@
     <None Include="Vertexshader.vert" />
     <None Include="lampFs.frag" />
     <None Include="lampVs.vert" />
+    <None Include="MultipleLightFragmentShader.frag" />
   </ItemGroup>
 </Project>
