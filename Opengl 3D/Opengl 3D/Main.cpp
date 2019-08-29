@@ -122,6 +122,7 @@ int main()
 		lightingShader.SetVector3f("light.position", camera.position, GL_FALSE);
 		lightingShader.SetVector3f("light.direction", camera.front, GL_FALSE);
 		lightingShader.SetFloat("light.cutOff", glm::cos(glm::radians(12.5f)), GL_FALSE);
+		lightingShader.SetFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)), GL_FALSE);
 		lightingShader.SetVector3f("viewPos", camera.position, GL_FALSE);
 
 		
