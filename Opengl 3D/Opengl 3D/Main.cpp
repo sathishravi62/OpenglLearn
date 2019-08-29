@@ -6,12 +6,13 @@
 #include <GLM/gtx/rotate_vector.hpp>
 #include <GLM/gtc/type_ptr.hpp>
 
+#include "Model.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Error.h"
 #include "Camera.h"
 #include "Objects.h"
-
+#include <filesystem>
 
 void frameBuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -30,28 +31,6 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-
-glm::vec3 cubePositions[] = {
-	glm::vec3(0.0f,  0.0f,  0.0f),
-	glm::vec3(2.0f,  5.0f, -15.0f),
-	glm::vec3(-1.5f, -2.2f, -2.5f),
-	glm::vec3(-3.8f, -2.0f, -12.3f),
-	glm::vec3(2.4f, -0.4f, -3.5f),
-	glm::vec3(-1.7f,  3.0f, -7.5f),
-	glm::vec3(1.3f, -2.0f, -2.5f),
-	glm::vec3(1.5f,  2.0f, -2.5f),
-	glm::vec3(1.5f,  0.2f, -1.5f),
-	glm::vec3(-1.3f,  1.0f, -1.5f)
-};
-
-// positions of the point lights
-glm::vec3 pointLightPositions[] = {
-	glm::vec3(0.7f,  0.2f,  2.0f),
-	glm::vec3(2.3f, -3.3f, -4.0f),
-	glm::vec3(-4.0f,  2.0f, -12.0f),
-	glm::vec3(0.0f,  0.0f, -3.0f)
-};
 
 int main()
 {
@@ -80,30 +59,18 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);
 
-	Shader lightingShader;
-	lightingShader.loadShaderFromFile("Vertexshader.vert", "MultipleLightFragmentshader.frag");
-	
-	Shader lampShader;
-	lampShader.loadShaderFromFile("lampVs.vert", "lampFs.frag");
+	// build and compile shaders
+   // -------------------------
+	Shader ourShader;
+	ourShader.loadShaderFromFile("ModelVertexShader.vert", "ModelFragmentShader.frag");
 
-	// create Light cube
-	Objects lightingObject;
-	lightingObject.CreateObject();
-
-	// create LampObject
-	Objects lampObjects;
-	lampObjects.CreateObject();
-
-	//// create texture
-	Texture ourTexture;
-	ourTexture.LoadTexture("texture/cont.png", GL_TRUE);
-	Texture specularTex;
-	specularTex.LoadTexture("texture/contSpec.png", GL_TRUE);
+	// load models
+	// -----------
+	Model ourModel("nanosuit/nanosuit.obj");
 
 
-	lightingShader.SetInteger("material.diffuse", 0,GL_TRUE);
-	lightingShader.SetInteger("material.specular", 1, GL_TRUE);
-	
+	// draw in wireframe
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	while (!glfwWindowShouldClose(_window))
 	{
@@ -119,115 +86,20 @@ int main()
 		// render
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		ourShader.Use();
 
-		// be sure to activate shader when setting uniforms/drawing objects
-		lightingShader.Use();
-		lightingShader.SetVector3f("viewPos", camera.position);
-		lightingShader.SetFloat("material.shininess", 32.0f);
-
-		/*
-		   Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index
-		   the proper PointLight struct in the array to set each uniform variable. This can be done more code-friendly
-		   by defining light types as classes and set their values in there, or by using a more efficient uniform approach
-		   by using 'Uniform buffer objects', but that is something we'll discuss in the 'Advanced GLSL' tutorial.
-		*/
-
-		//// bind textures on corresponding texture units
-		//ourTexture.Bind();
-
-		// directional light
-		lightingShader.SetVector3f("dirLight.direction", -0.2f, -1.0f, -0.3f);
-		lightingShader.SetVector3f("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-		lightingShader.SetVector3f("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-		lightingShader.SetVector3f("dirLight.specular", 0.5f, 0.5f, 0.5f);
-		// point light 1
-		lightingShader.SetVector3f("pointLights[0].position", pointLightPositions[0]);
-		lightingShader.SetVector3f("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-		lightingShader.SetVector3f("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-		lightingShader.SetVector3f("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.SetFloat("pointLights[0].constant", 1.0f);
-		lightingShader.SetFloat("pointLights[0].linear", 0.09);
-		lightingShader.SetFloat("pointLights[0].quadratic", 0.032);
-		// point light 2
-		lightingShader.SetVector3f("pointLights[1].position", pointLightPositions[1]);
-		lightingShader.SetVector3f("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-		lightingShader.SetVector3f("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-		lightingShader.SetVector3f("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.SetFloat("pointLights[1].constant", 1.0f);
-		lightingShader.SetFloat("pointLights[1].linear", 0.09);
-		lightingShader.SetFloat("pointLights[1].quadratic", 0.032);
-		// point light 3
-		lightingShader.SetVector3f("pointLights[2].position", pointLightPositions[2]);
-		lightingShader.SetVector3f("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
-		lightingShader.SetVector3f("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-		lightingShader.SetVector3f("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.SetFloat("pointLights[2].constant", 1.0f);
-		lightingShader.SetFloat("pointLights[2].linear", 0.09);
-		lightingShader.SetFloat("pointLights[2].quadratic", 0.032);
-		// point light 4
-		lightingShader.SetVector3f("pointLights[3].position", pointLightPositions[3]);
-		lightingShader.SetVector3f("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
-		lightingShader.SetVector3f("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
-		lightingShader.SetVector3f("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.SetFloat("pointLights[3].constant", 1.0f);
-		lightingShader.SetFloat("pointLights[3].linear", 0.09);
-		lightingShader.SetFloat("pointLights[3].quadratic", 0.032);
-		// spotLight
-		lightingShader.SetVector3f("spotLight.position", camera.position);
-		lightingShader.SetVector3f("spotLight.direction", camera.front);
-		lightingShader.SetVector3f("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-		lightingShader.SetVector3f("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-		lightingShader.SetVector3f("spotLight.specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.SetFloat("spotLight.constant", 1.0f);
-		lightingShader.SetFloat("spotLight.linear", 0.09);
-		lightingShader.SetFloat("spotLight.quadratic", 0.032);
-		lightingShader.SetFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		lightingShader.SetFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-		// Implemeting Projection matrix
-		glm::mat4 projection = glm::mat4(1.0f);
-		projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		lightingShader.SetMatrix4("p", projection, GL_FALSE);
-
-		// camera/view transformation
+		// view/projection transformations
+		glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.getViewMatrix();
-		lightingShader.SetMatrix4("view", view, GL_FALSE);// passing the value to the model matrix in shader
-		
+		ourShader.SetMatrix4("projection", projection);
+		ourShader.SetMatrix4("view", view);
+
+		// render the loaded model
 		glm::mat4 model = glm::mat4(1.0f);
-		lightingShader.SetMatrix4("model", model, GL_FALSE);
-		
-		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, ourTexture.ID);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specularTex.ID);
-
-
-
-		// draw lighting object
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 20.0f * i;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			lightingShader.SetMatrix4("model", model);
-			lightingObject.draw();
-		}
-
-		lampShader.Use();
-		lampShader.SetMatrix4("p", projection, GL_FALSE);
-		lampShader.SetMatrix4("view", view, GL_FALSE);
-
-		for (int i = 0; i < 4; i++)
-		{
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, pointLightPositions[i]);
-			model = glm::scale(model, glm::vec3(0.2f));
-			lampShader.SetMatrix4("model", model, GL_FALSE);
-			lampObjects.draw();
-		}
-	
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
+		ourShader.SetMatrix4("model", model);
+		ourModel.Draw(ourShader);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------

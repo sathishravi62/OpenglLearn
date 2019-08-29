@@ -33,6 +33,12 @@
     <ClCompile Include="Objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Error.h">
@@ -50,6 +56,12 @@
     <ClInclude Include="Objects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Fragmentshader.frag" />
@@ -57,5 +69,7 @@
     <None Include="lampFs.frag" />
     <None Include="lampVs.vert" />
     <None Include="MultipleLightFragmentShader.frag" />
+    <None Include="ModelVertexShader.vert" />
+    <None Include="ModelFragmentShader.frag" />
   </ItemGroup>
 </Project>
