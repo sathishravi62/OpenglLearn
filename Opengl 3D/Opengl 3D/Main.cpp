@@ -119,25 +119,27 @@ int main()
 
 		// draw our first triangle
 		lightingShader.Use();
-		lightingShader.SetVector3f("light.position", lightPos, GL_FALSE);
+		lightingShader.SetVector3f("light.position", camera.position, GL_FALSE);
+		lightingShader.SetVector3f("light.direction", camera.front, GL_FALSE);
+		lightingShader.SetFloat("light.cutOff", glm::cos(glm::radians(12.5f)), GL_FALSE);
 		lightingShader.SetVector3f("viewPos", camera.position, GL_FALSE);
 
 		
-		lightingShader.SetVector3f("light.ambient",glm::vec3(0.2f,0.2f,0.2f));
+		lightingShader.SetVector3f("light.ambient",glm::vec3(0.1f,0.1f,0.1f));
 		lightingShader.SetVector3f("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5));
 		lightingShader.SetVector3f("light.specular", 1.0f, 1.0f, 1.0f);
-		
-
-		// material properties
-		lightingShader.SetVector3f("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
-		lightingShader.SetFloat("material.shininess", 64.0f);
-		lightingShader.SetFloat("time", glfwGetTime());
 		lightingShader.SetFloat("light.constant", 1.0f);
 		lightingShader.SetFloat("light.linear", 0.09f);
 		lightingShader.SetFloat("light.quadratic", 0.032f);
 
+
+		// material properties
+		lightingShader.SetVector3f("material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+		lightingShader.SetFloat("material.shininess", 32.0f);
+		//lightingShader.SetFloat("time", glfwGetTime());
+		
 		// Implemeting Projection matrix
-		glm::mat4 projection;
+		glm::mat4 projection = glm::mat4(1.0f);
 		projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		lightingShader.SetMatrix4("p", projection, GL_FALSE);
 
@@ -147,7 +149,7 @@ int main()
 		
 		glm::mat4 model = glm::mat4(1.0f);
 		lightingShader.SetMatrix4("model", model, GL_FALSE);
-		lightingShader.SetVector3f("light.direction", -0.2f, -1.0f, -0.3f);
+		
 		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, ourTexture.ID);
