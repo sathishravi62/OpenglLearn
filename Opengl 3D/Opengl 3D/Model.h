@@ -13,6 +13,13 @@
 #include "Shader.h"
 #include "Mesh.h"
 
+struct Material {
+	glm::vec3 Diffuse;
+	glm::vec3 Specular;
+	glm::vec3 Ambient;
+	float Shininess;
+};
+
 class Model
 {
 public:
@@ -21,6 +28,7 @@ public:
 	std::vector<TextureModel> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
 	Model(const char *path);
 	void Draw(Shader shader);
+	Material modelmaterial;
 private:
 	/*  Model Data  */
 	std::vector<Mesh> meshes;
@@ -31,7 +39,8 @@ private:
 	Mesh processMesh(aiMesh *mesh, const aiScene *scene);
 	std::vector<TextureModel> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
 		std::string typeName);
-	unsigned int TextureFromFile(const char *path, const std::string &directory);
+	GLuint TextureFromFile(const char *path, const std::string &directory);
+	Material loadMaterial(aiMaterial* mat);
 };
 
 
